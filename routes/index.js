@@ -26,11 +26,11 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/filterPaintings', async (req, res) => {
-  const { prices, color, sizes } = req.body;
+  const { availability, prices, color, sizes, orientation, type } = req.body;
 
   try {
   
-    const paintingsFiltered = await getPaintingFiltered(prices, color, sizes);
+    const paintingsFiltered = await getPaintingFiltered(availability, prices, color, sizes, orientation, type);
     res.status(200).json(paintingsFiltered);
   } catch (err) {
       console.error(err);
