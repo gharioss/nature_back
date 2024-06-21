@@ -72,12 +72,14 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
         if (query !== initialQuery) {
             query += 'AND';
         };
+        colorClause += ' (';
         color.forEach(element => {
-            colorClause += ` color = '${element}' OR`;
+            colorClause += ` c.color = '${element}' OR`;
         });
 
         if (colorClause.endsWith("OR")) {
             colorClause = colorClause.slice(0, -2);
+            colorClause += ')';
         }
 
         query += colorClause;

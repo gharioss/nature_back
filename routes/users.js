@@ -1,5 +1,7 @@
 var express = require('express');
-const { getAllUsers, getUserById } = require('../model/users');
+const { getAllUsers, getUserById, registerUser } = require('../model/users');
+const bcrypt = require("bcrypt")
+const saltRounds = 10
 var router = express.Router();
 
 /* GET home page. */
@@ -33,8 +35,27 @@ router.post("/login", async (req, res) => {
   if (!user.message) {
     req.session.user = user;
   }
+});
 
-  res.redirect("/form");
+router.post("/register", async (req, res) => {
+  const userInformations = {'first_name': req.body.values.first_name,
+                            'last_name': req.body.values.last_name,
+                            'email': req.body.values.email,
+                            'stay_logged_in': req.body.values.stay_logged_in};
+
+  const userPassword = req.body.values.password
+
+
+  try {
+    const hash = await bcrypt.hash(userPassword, saltRounds);
+    userInformations.password = hash;
+    await registerUser(userInformations);
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Error registering user', error: err });
+  }
+
 });
 
 module.exports = router;
