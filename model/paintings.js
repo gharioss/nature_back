@@ -16,7 +16,9 @@ const getAllPaintings = () => {
 
 const getPaintingById = (id) => {
     return new Promise((resolve, reject) => {
-        con.query(sqlToGetPaintingsWithImages + 'WHERE p.id_painting = ' + id, (err, rows, fields) => {
+        const sql = "SELECT p.*, h.height, w.width, d.depth, c.color, a.availability, o.orientation, tp.type_painting, i.image, i.id_image FROM painting p LEFT JOIN height h ON p.id_height = h.id_height LEFT JOIN width w ON p.id_width = w.id_width LEFT JOIN depth d ON p.id_depth = d.id_depth LEFT JOIN color c on p.id_color = c.id_color LEFT JOIN availability a ON p.id_availability = a.id_availability LEFT JOIN orientation o ON p.id_orientation = o.id_orientation LEFT JOIN type_painting tp ON p.id_type_painting = tp.id_type_painting LEFT JOIN image i ON i.id_painting = p.id_painting WHERE p.id_painting = " + id;
+
+        con.query(sql, (err, rows, fields) => {
             if (err) {
                 reject(err);
             } else {
@@ -130,6 +132,10 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
         query += typeClause;
     }
 
+    if (query.endsWith("WHERE")) {
+        query = typeClause.slice(0, -5);
+    }
+
     query += ' ORDER BY p.created_at DESC'
 
     query += ';'
@@ -137,7 +143,7 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
     console.log(query);
 
     if(availabilityClause == '' && pricesClause == '' && colorClause == '' && sizesClause == '' && orientationClause == '' && typeClause == '') {
-        query = sqlToGetPaintingsWithImages;
+        query = sqlToGetPaintingsWithImages + ' ORDER BY p.created_at DESC;';
     }
 
     return new Promise((resolve, reject) => {
@@ -156,8 +162,7 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
     return new Promise((resolve, reject) => {
         const sql = `INSERT INTO painting (name, price, id_height, id_width, id_depth, id_color, id_availability, id_orientation, id_type_painting) VALUES (?,?,?,?,?,?,?,?,?)`;
 
-        console.log(data['paintingFormData.name'])
-        const values = [data['paintingFormData.name'], data['paintingFormData.price'], data['paintingFormData.height'], data['paintingFormData.width'], data['paintingFormData.depth'], data['paintingFormData.color'], data['paintingFormData.availability'], data['paintingFormData.orientation'], data['paintingFormData.type_painting']];
+        const values = [data.name, data.price, data.height, data.width, data.depth, data.color, data.availability, data.orientation, data.type_painting];
     
         con.query(sql, values, (err, result) => {
           if (err) {
@@ -170,17 +175,17 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
 };
 
 const insertFiles = (id, fileRecords) => {
-
     return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO image (id_painting, image) VALUES (?,?)`;
-    
-        con.query(sql, id, [fileRecords], (err, result) => {
-            console.log(result)
-          if (err) {
-            reject(err);
-          } else {
-            resolve('Painting registered successfully');
-          }
+        const sql = "INSERT INTO image (id_painting, image) VALUES (?, ?)";
+
+        fileRecords.forEach(element => {
+            con.query(sql, [id, element[0].path], (err, result) => {
+                if (err) {
+                    reject('Error');
+                } else {
+                    resolve(result);
+                }
+            });
         });
     });
 };

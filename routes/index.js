@@ -1,5 +1,5 @@
 var express = require('express');
-const { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData } = require('../model/paintings');
+const { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, insertFiles } = require('../model/paintings');
 var router = express.Router();
 const multer = require('multer');
 const path = require('path');
@@ -57,24 +57,25 @@ const upload = multer({ storage });
 // Route to handle file upload
 router.post('/upload', upload.array('files'), async (req, res) => {
 
+
   const files = req.files;
   const paintingInformation = req.body;
 
   const postPainting = await insertPaintingData(paintingInformation);
 
-  console.log(files)
-
   if(files.length !== 0) {
 
-    const fileRecords = files.map(file => [
-      file.filename,
-      file.path,
-      file.mimetype
-    ]);
-  
-    const postFilesofPainting = await insertPaintingData(postPainting, fileRecords);
+    const fileRecords = files.map(file => [{
+      filename:file.filename,
+      path:file.path,
+      mimetype:file.mimetype
+    }]);
 
-    console.log(postFilesofPainting)
+    const postFilesofPainting = await insertFiles(postPainting, fileRecords);
+
+    if(postFilesofPainting !== 'Error') {
+      res.status(200).json('Ajout réussi');
+    }
   }
   
 });
