@@ -4,7 +4,7 @@ let sqlToGetPaintingsWithImages = "SELECT p.*, h.height, w.width, d.depth, c.col
 
 const getAllPaintings = () => {
     return new Promise((resolve, reject) => {
-        con.query(sqlToGetPaintingsWithImages + ';', (err, rows, fields) => {
+        con.query(sqlToGetPaintingsWithImages + ' ORDER BY p.created_at DESC;', (err, rows, fields) => {
             if (err) {
                 reject(err);
             } else {
@@ -130,6 +130,8 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
         query += typeClause;
     }
 
+    query += ' ORDER BY p.created_at DESC'
+
     query += ';'
 
     console.log(query);
@@ -149,4 +151,38 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
     });
   };
 
-module.exports = { getAllPaintings, getPaintingById, getPaintingFiltered };
+  const insertPaintingData = (data) => {
+
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO painting (name, price, id_height, id_width, id_depth, id_color, id_availability, id_orientation, id_type_painting) VALUES (?,?,?,?,?,?,?,?,?)`;
+
+        console.log(data['paintingFormData.name'])
+        const values = [data['paintingFormData.name'], data['paintingFormData.price'], data['paintingFormData.height'], data['paintingFormData.width'], data['paintingFormData.depth'], data['paintingFormData.color'], data['paintingFormData.availability'], data['paintingFormData.orientation'], data['paintingFormData.type_painting']];
+    
+        con.query(sql, values, (err, result) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result.insertId);
+          }
+        });
+    });
+};
+
+const insertFiles = (id, fileRecords) => {
+
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO image (id_painting, image) VALUES (?,?)`;
+    
+        con.query(sql, id, [fileRecords], (err, result) => {
+            console.log(result)
+          if (err) {
+            reject(err);
+          } else {
+            resolve('Painting registered successfully');
+          }
+        });
+    });
+};
+
+module.exports = { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, insertFiles };

@@ -1,5 +1,5 @@
 const { con } = require('../utils/db.js');
-const { bcrypt } = require('bcrypt');
+const { bcrypt, compare } = require('bcrypt');
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
@@ -34,27 +34,6 @@ const getUserById = (id) => {
     });
 };
 
-const loginUser = (id) => {
-    return new Promise((resolve, reject) => {
-        con.connect((err) => {
-          const sql = "SELECT * FROM user WHERE email = ?";
-          con.query(sql, user[0], (err, result, fields) => {
-            if (err) reject(err);
-    
-            if (result[0]) {
-              bcrypt.compare(user[1], result[0].password, (error, response) => {
-                if (response) {
-                  resolve(result);
-                }
-              });
-            } else {
-              resolve({ message: "User doesn't exist" });
-            }
-          });
-        });
-      });
-};
-
 const registerUser = (userInformations) => {
   const random_uuid = uuidv4();
 
@@ -72,6 +51,24 @@ const registerUser = (userInformations) => {
   });
 };
 
+const loginUser = (values) => {
+  return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM user WHERE email = ?";
+      con.query(sql, values.email, async (err, result) => {
+        if (err) reject(err);
 
-module.exports = { getAllUsers, getUserById, registerUser };
+        if (result[0]) {
+          const passwordsMatch = await compare(values.password, result[0].password);
+          if (!passwordsMatch) {
+            resolve('Error')
+          } else {
+            resolve(result[0])
+          }
+        }
+      });
+    });
+};
+
+
+module.exports = { getAllUsers, getUserById, registerUser, loginUser };
 

@@ -1,8 +1,11 @@
 var express = require('express');
-const { getAllUsers, getUserById, registerUser } = require('../model/users');
+const { getAllUsers, getUserById, registerUser, loginUser } = require('../model/users');
 const bcrypt = require("bcrypt")
 const saltRounds = 10
 var router = express.Router();
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'your_jwt_secret_key';
 
 /* GET home page. */
 router.get('/', async (req, res) => {
@@ -28,34 +31,39 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
-  const userInformations = [req.body.email, req.body.password];
-
-  const user = await login(userInformations);
-  if (!user.message) {
-    req.session.user = user;
-  }
-});
-
 router.post("/register", async (req, res) => {
-  const userInformations = {'first_name': req.body.values.first_name,
-                            'last_name': req.body.values.last_name,
-                            'email': req.body.values.email,
-                            'stay_logged_in': req.body.values.stay_logged_in};
+  const userInformations = {'first_name': req.body.formData.first_name,
+                            'last_name': req.body.formData.last_name,
+                            'email': req.body.formData.email,
+                            'stay_logged_in': req.body.formData.stay_logged_in};
 
-  const userPassword = req.body.values.password
+  const userPassword = req.body.formData.password
 
 
   try {
     const hash = await bcrypt.hash(userPassword, saltRounds);
     userInformations.password = hash;
     await registerUser(userInformations);
-    res.status(201).json({ message: 'User registered successfully' });
+    const token = jwt.sign({ userId: user.guid }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ guid: user.guid, token: token });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ message: 'Error registering user', error: err });
   }
 
+});
+
+router.post("/login", async (req, res) => {
+  const userInformations = {'email': req.body.formData.email,
+                            'password': req.body.formData.password};
+
+  const user = await loginUser(userInformations);
+  if(user != 'Error') {
+      const token = jwt.sign({ userId: user.guid_user }, JWT_SECRET, { expiresIn: '1h' });
+      res.json({ guid: user.guid_user, token: token });
+  } else {
+    res.status(401).json({ message: 'Invalid username or password' });
+  }
 });
 
 module.exports = router;
