@@ -28,7 +28,8 @@ const getPaintingById = (id) => {
     });
 };
 
-const getPaintingFiltered = async (availability, prices, color, sizes, orientation, type) => {
+const getPaintingFiltered = async (search, availability, prices, color, sizes, orientation, type) => {
+    let searchClause = '';
     let availabilityClause = '';
     let pricesClause = '';
     let colorClause = '';
@@ -38,6 +39,11 @@ const getPaintingFiltered = async (availability, prices, color, sizes, orientati
 
     let initialQuery = sqlToGetPaintingsWithImages + ' WHERE';
     let query = sqlToGetPaintingsWithImages + ' WHERE';
+
+    if (search !== undefined && search.length > 0) {
+
+        query += ` p.name LIKE '%${search}%' `;
+    }
 
     if (availability !== undefined && availability.length > 0) {
         if (query !== initialQuery) {
