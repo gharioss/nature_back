@@ -148,7 +148,7 @@ const getPaintingFiltered = async (search, availability, prices, color, sizes, o
 
     console.log(query);
 
-    if(availabilityClause == '' && pricesClause == '' && colorClause == '' && sizesClause == '' && orientationClause == '' && typeClause == '') {
+    if(search == '' && availabilityClause == '' && pricesClause == '' && colorClause == '' && sizesClause == '' && orientationClause == '' && typeClause == '') {
         query = sqlToGetPaintingsWithImages + ' ORDER BY p.created_at DESC;';
     }
 
