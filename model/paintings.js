@@ -4,7 +4,7 @@ let sqlToGetPaintingsWithImages = "SELECT p.*, h.height, w.width, d.depth, c.col
 
 const getAllPaintings = () => {
     return new Promise((resolve, reject) => {
-        con.query(sqlToGetPaintingsWithImages + ' ORDER BY p.created_at DESC;', (err, rows, fields) => {
+        con.query(sqlToGetPaintingsWithImages + ' ORDER BY p.updated_at DESC;', (err, rows, fields) => {
             if (err) {
                 reject(err);
             } else {
@@ -180,6 +180,24 @@ const getPaintingFiltered = async (search, availability, prices, color, sizes, o
     });
 };
 
+const updatePaintingData = (data) => {
+
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE painting SET name = ?, price = ?, id_height = ?, id_width = ?, id_depth = ?, id_color = ?, id_availability = ?, id_orientation = ?, id_type_painting = ?, updated_at = NOW() WHERE id_painting = ?`;
+
+        const values = [data.name, data.price, data.height, data.width, data.depth, data.color, data.availability, data.orientation, data.type_painting, data.id_painting];
+    
+        con.query(sql, values, (err, result) => {
+          if (err) {
+            reject('Error');
+          } else {
+            resolve(result.insertId);
+          }
+        });
+    });
+};
+
+
 const insertFiles = (id, fileRecords) => {
     return new Promise((resolve, reject) => {
         const sql = "INSERT INTO image (id_painting, image) VALUES (?, ?)";
@@ -196,4 +214,4 @@ const insertFiles = (id, fileRecords) => {
     });
 };
 
-module.exports = { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, insertFiles };
+module.exports = { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, updatePaintingData, insertFiles };
