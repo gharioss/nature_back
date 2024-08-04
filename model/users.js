@@ -1,5 +1,14 @@
 const { con } = require('../utils/db.js');
-const { bcrypt } = require('bcrypt');
+const { bcrypt, compare } = require('bcrypt');
+
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+  .replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0, 
+          v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+  });
+}
 
 const getAllUsers = () => {
     return new Promise((resolve, reject) => {
@@ -25,35 +34,41 @@ const getUserById = (id) => {
     });
 };
 
-const loginUser = (id) => {
-    return new Promise((resolve, reject) => {
-        con.connect((err) => {
-          const sql = "SELECT * FROM user WHERE email = ?";
-          con.query(sql, user[0], (err, result, fields) => {
-            if (err) reject(err);
-    
-            if (result[0]) {
-              bcrypt.compare(user[1], result[0].password, (error, response) => {
-                if (response) {
-                  resolve(result);
-                }
-              });
-            } else {
-              resolve({ message: "User doesn't exist" });
-            }
-          });
-        });
-      });
+const registerUser = (userInformations) => {
+  const random_uuid = uuidv4();
+
+  return new Promise((resolve, reject) => {
+    const sql = `INSERT INTO user (guid_user, email, password, first_name, last_name, role) VALUES (?,?,?,?,?,?)`;
+    const values = [random_uuid, userInformations.email, userInformations.password, userInformations.first_name, userInformations.last_name, 'user'];
+
+    con.query(sql, values, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve('User registered successfully');
+      }
+    });
+  });
 };
 
-const registerUser = (userInformation) => {
-    con.connect((err) => {
-      const sql = `INSERT INTO user (email, password, first_name, last_name) VALUES (?,?,?,?)`;
-      con.query(sql, userInformation, (err, result) => {
-        if (err) throw err;
-        console.log(result);
+const loginUser = (values) => {
+  return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM user WHERE email = ?";
+      con.query(sql, values.email, async (err, result) => {
+        if (err) reject(err);
+
+        if (result[0]) {
+          const passwordsMatch = await compare(values.password, result[0].password);
+          if (!passwordsMatch) {
+            resolve('Error')
+          } else {
+            resolve(result[0])
+          }
+        }
       });
     });
-  };
+};
 
-module.exports = { getAllUsers, getUserById, registerUser };
+
+module.exports = { getAllUsers, getUserById, registerUser, loginUser };
+

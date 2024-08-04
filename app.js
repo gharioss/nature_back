@@ -6,6 +6,7 @@ var logger = require('morgan');
 var cors = require('cors');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var sizeRouter = require('./routes/size');
 
 var app = express();
 
@@ -14,9 +15,11 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 app.use('/paintings', indexRouter);
 app.use('/users', usersRouter);
+app.use('/size', sizeRouter);
 
 module.exports = app;
