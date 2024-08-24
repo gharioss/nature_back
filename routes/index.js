@@ -1,5 +1,5 @@
 var express = require('express');
-const { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, updatePaintingData, insertFiles } = require('../model/paintings');
+const { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, updatePaintingData, insertFiles, editFiles, deleteFiles } = require('../model/paintings');
 var router = express.Router();
 const multer = require('multer');
 const path = require('path');
@@ -85,23 +85,33 @@ router.put('/edit', upload.array('files'), async (req, res) => {
 
   const files = req.files;
   const paintingInformation = req.body;
+  const id_painting = paintingInformation.id_painting;
+
+  const idsToDelete = paintingInformation.deleteid;
+
+  console.log('filesfilesfiles', files)
 
   const postPainting = await updatePaintingData(paintingInformation);
 
-  // if(files.length !== 0) {
+  if(idsToDelete) {
+    deleteFiles(idsToDelete, id_painting);
+  }
 
-  //   const fileRecords = files.map(file => [{
-  //     filename:file.filename,
-  //     path:file.path,
-  //     mimetype:file.mimetype
-  //   }]);
 
-  //   const postFilesofPainting = await insertFiles(postPainting, fileRecords);
+  if(files.length !== 0) {
 
-    if(postPainting !== 'Error') {
+    const fileRecords = files.map(file => [{
+      filename:file.filename,
+      path:file.path,
+      mimetype:file.mimetype
+    }]);
+
+    const postFilesofPainting = await insertFiles(id_painting, fileRecords);
+
+    if(postFilesofPainting !== 'Error') {
       res.status(200).json('Ajout réussi');
     }
-  // }
+  }
   
 });
 

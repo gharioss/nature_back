@@ -214,4 +214,39 @@ const insertFiles = (id, fileRecords) => {
     });
 };
 
-module.exports = { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, updatePaintingData, insertFiles };
+const deleteFiles = (id_image, id_painting) => {
+    const del = "DELETE FROM image WHERE id_image = ?;"
+    const update_painting  = "UPDATE painting SET updated_at = NOW() WHERE id_painting = ?;"
+
+    console.log('id_imageid_image, ', id_image)
+
+
+    if(typeof id_image === 'string') {
+        con.query(del, id_image, (err, result) => {
+            if (err) {
+                return('Error');
+            } else {
+                return(result);
+            }
+        });
+    } else {
+        id_image.forEach(id => {
+            con.query(del, id, (err, result) => {
+                if (err) {
+                    return('Error');
+                } else {
+                    return(result);
+                }
+            });
+        });
+    }
+    con.query(update_painting, id_painting, (err, result) => {
+        if (err) {
+            return('Error');
+        } else {
+            return(result);
+        }
+    });
+}
+
+module.exports = { getAllPaintings, getPaintingById, getPaintingFiltered, insertPaintingData, updatePaintingData, insertFiles, deleteFiles };
